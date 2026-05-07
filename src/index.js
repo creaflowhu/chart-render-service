@@ -270,6 +270,43 @@ function spendDoughnut(accounts, platformColor) {
 app.get('/health', (_req, res) => res.json({ ok: true, service: 'chart-render-service' }));
 
 /**
+ * POST /render/all
+ * Body: { meta: {accounts, daily, width?, height?}, google: {accounts, daily, width?, height?} }
+ * Returns: { meta: {charts}, google: {charts} }
+ */
+app.post('/render/all', async (req, res) => {
+  try {
+    const { meta = {}, google = {} } = req.body;
+
+    async function renderPlatform(payload, platformColor) {
+      const { accounts = [], daily = [], width = 560, height = 240 } = payload;
+      const color = platformColor;
+      const canvas = makeCanvas(width, height);
+      const smallCanvas = makeCanvas(Math.round(width * 0.48), height);
+
+      const [c1, c2, c3, c4] = await Promise.all([
+        canvas.renderToDataURL(impressionClickChart(daily, color)),
+        canvas.renderToDataURL(costRevenueChart(daily)),
+        smallCanvas.renderToDataURL(roasBarChart(accounts.filter(a => (a.tracking_type || 'purchase') !== 'lead'), color)),
+        smallCanvas.renderToDataURL(spendDoughnut(accounts, color)),
+      ]);
+
+      return { impressions_clicks: c1, cost_revenue: c2, roas_bar: c3, spend_donut: c4 };
+    }
+
+    const [metaCharts, googleCharts] = await Promise.all([
+      renderPlatform(meta, BLUE),
+      renderPlatform(google, PURPLE),
+    ]);
+
+    res.json({ ok: true, meta: metaCharts, google: googleCharts });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+/**
  * POST /render/platform
  * Body: { platform: 'meta'|'google', accounts: [...], daily: [...], width?, height? }
  * Returns: { charts: { impressions_clicks, cost_revenue, roas_bar, spend_donut } }
