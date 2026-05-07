@@ -1,0 +1,15 @@
+{
+  "name": "chart-render-service",
+  "version": "1.0.0",
+  "description": "CreaFlow PPC Chart Rendering Microservice",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "chartjs-node-canvas": "^4.1.6",
+    "chart.js": "^4.4.3"
+  }
+}
