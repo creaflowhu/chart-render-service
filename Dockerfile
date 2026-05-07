@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 COPY package.json ./
-RUN npm install --production
+RUN npm install --production --legacy-peer-deps
 
 COPY src/ ./src/
 
